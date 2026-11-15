@@ -73,4 +73,9 @@ export interface GetAttackTypeEffectivenessParams {
    * @defaultValue `false`
    */
   useIllusion?: boolean;
+  /**
+   * If `true`, ignores this Pokemon's abilities that would make it ungrounded (e.g. Levitate).
+   * @defaultValue `false`
+   */
+  ignoreAbility?: boolean;
 }

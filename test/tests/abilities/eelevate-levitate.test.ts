@@ -4,6 +4,7 @@
  * SPDX-License-Identifier: AGPL-3.0-only
  */
 
+import { allMoves } from "#data/data-lists";
 import { AbilityId } from "#enums/ability-id";
 import { MoveId } from "#enums/move-id";
 import { SpeciesId } from "#enums/species-id";
@@ -72,5 +73,16 @@ describe.each([
     expect(player).toHaveFullHp();
     expect(player).toHaveStatusEffect(StatusEffect.NONE);
     expect(player).toHaveStatStage(Stat.SPD, 0);
+  });
+
+  it("should not affect Ground-type move effectiveness when abilities are ignored", async () => {
+    await game.classicMode.startBattle(SpeciesId.FEEBAS);
+
+    const player = game.field.getPlayerPokemon();
+    const enemy = game.field.getEnemyPokemon();
+    const earthquake = allMoves[MoveId.EARTHQUAKE];
+
+    expect(player.getMoveEffectiveness(enemy, earthquake, false)).toBe(0);
+    expect(player.getMoveEffectiveness(enemy, earthquake, true)).toBe(1);
   });
 });

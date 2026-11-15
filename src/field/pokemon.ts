@@ -2552,19 +2552,24 @@ export abstract class Pokemon extends Phaser.GameObjects.Container {
   }
 
   /**
+   * @param ignoreAbility - (Default `false`) Whether to ignore abilities that would unground this Pokemon
    * @returns Whether this Pokemon is ungrounded by the effect of a move or ability
    * @privateRemarks
    * This method does not account for typing or semi-invulnerability as it is used to determine
    * whether Ground-type moves should be nullified against airborne defenders (both of which are ignored by the latter).
    * @see {@linkcode isGrounded}
    */
-  private isForciblyUngrounded(): boolean {
+  private isForciblyUngrounded(ignoreAbility = false): boolean {
     if (this.isForciblyGrounded()) {
       return false;
     }
 
     if (this.getTag(BattlerTagType.FLOATING) || this.getTag(BattlerTagType.TELEKINESIS)) {
       return true;
+    }
+
+    if (ignoreAbility) {
+      return false;
     }
 
     const isUngrounded = new ValueHolder(false);
@@ -2732,7 +2737,13 @@ export abstract class Pokemon extends Phaser.GameObjects.Container {
 
     const typeMultiplier = new ValueHolder(1);
     if (move.category !== MoveCategory.STATUS || move.hasAttr("RespectAttackTypeImmunityAttr")) {
-      typeMultiplier.value = this.getAttackTypeEffectiveness(moveType, { source, simulated, move, useIllusion });
+      typeMultiplier.value = this.getAttackTypeEffectiveness(moveType, {
+        source,
+        simulated,
+        move,
+        useIllusion,
+        ignoreAbility,
+      });
     }
 
     if (move.hasAttr("FixedDamageAttr") && typeMultiplier.value > 0) {
@@ -2806,6 +2817,7 @@ export abstract class Pokemon extends Phaser.GameObjects.Container {
       simulated = true,
       move,
       useIllusion = false,
+      ignoreAbility = false,
     }: GetAttackTypeEffectivenessParams = {},
   ): TypeDamageMultiplier {
     if (moveType === PokemonType.STELLAR) {
@@ -2819,7 +2831,7 @@ export abstract class Pokemon extends Phaser.GameObjects.Container {
     // rendered airborne by something other than their typing/semi-invuln (e.g. Levitate, Magnet Rise, Telekinesis).
     // Flying-types are ignored by this check as they lose their immunity in Inverse Battles.
     if (
-      this.isForciblyUngrounded()
+      this.isForciblyUngrounded(ignoreAbility)
       && moveType === PokemonType.GROUND
       && !move?.hasAttr("NeutralDamageAgainstFlyingTypeAttr")
     ) {
